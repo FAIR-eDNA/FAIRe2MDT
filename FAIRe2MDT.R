@@ -5,7 +5,13 @@
 # Note: For projects with multiple assays or sequencing runs, users must execute this script separately for each assay or run. 
 # The script generates an Excel file named <project_id>_<assay_name>_<seq_run_id>_MDTfmt.xlsx
 
-# Install required packages if not already installed
+# The below example input files are provided within the repository.
+# IOT-eDNA.xlsx
+# otuFinal_IOT-eDNA_COILeray_Library_2021.xlsx
+# taxaFinal_IOT-eDNA_COILeray_Library_2021.xlsx
+
+
+# Install required packages if not already installed ----------------------------------------------------
 packages <- c("readxl", "openxlsx", "dplyr", "tibble") 
 # Load in libraries
 for (i in packages) {
