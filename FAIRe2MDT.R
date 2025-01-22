@@ -1,9 +1,9 @@
 ### FAIRe2MDT
 
-# This script is to convert FAIR eDNA data templates for GBIF submission via MDT (Metabarcoding Data Toolkit) (https://www.gbif.org/metabarcoding)
+# This script converts metabarcoding data in the FAIRe format for submission to GBIF via the Metabarcoding Data Toolkit (MDT) (https://www.gbif.org/metabarcoding).
 
 # Note: For projects with multiple assays or sequencing runs, users must execute this script separately for each assay or run. 
-# The script generates an Excel file named <project_id>_<assay>_<seq_run>_MDTfmt.xlsx
+# The script generates an Excel file named <project_id>_<assay_name>_<seq_run_id>_MDTfmt.xlsx
 
 # Install required packages if not already installed
 packages <- c("readxl", "openxlsx", "dplyr", "tibble") 
