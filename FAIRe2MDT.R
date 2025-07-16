@@ -1,11 +1,23 @@
-### FAIRe2MDT
-
-# This script converts metabarcoding data in the FAIRe format for submission to GBIF via the Metabarcoding Data Toolkit (MDT) (https://www.gbif.org/metabarcoding).
-
+### FAIRe2MDT.R
+# Description: This script converts metabarcoding data in the FAIRe format for submission to GBIF via the Metabarcoding Data Toolkit (MDT) (https://www.gbif.org/metabarcoding).
+# Script version: 1.1.0
+# Last updated: 2025-07-16
+#
+# ----------------------------------------------------------
+# Script Version History (independent of checklist versions)
+# ----------------------------------------------------------
+# v1.1.0 - 2025-07-16
+# * Removed the assay_name column from the sample metadata sheet, as it was duplicated in both the sample and study sheets. While the assay_name field is necessary in the FAIRe format to support multiple assays within a single dataset, the MDT format assumes each dataset corresponds to a single assay and therefore does not require this field in the sample sheet.
+# * Renamed samp_name to id in the sample sheet
+# * Renamed seq_id to id in the taxonomy sheet
+#
+# v1.0.0 - 2025-01-23
+# * Initial public release of FAIRe2MDT tool
+#
 # Note: For projects with multiple assays or sequencing runs, users must execute this script separately for each assay or run. 
 # The script generates an Excel file named <project_id>_<assay_name>_<seq_run_id>_MDTfmt.xlsx
-
-# The below example input files are provided within the repository.
+#
+# The below example input files are provided within the repository (https://github.com/FAIR-eDNA/FAIR-eDNA.github.io/tree/main/docs/examples/metabarcoding/IOT-eDNA). 
 # IOT-eDNA.xlsx
 # otuFinal_IOT-eDNA_COILeray_Library_2021.xlsx
 # taxaFinal_IOT-eDNA_COILeray_Library_2021.xlsx
@@ -56,18 +68,15 @@ Project <- Project %>%
 Samples <- Samples %>%
   slice(-(1:(which(Samples[[1]] == "samp_name") - 1))) %>%  # Remove rows above 'sample_name'
   rename_with(~ as.character(Samples[which(Samples[[1]] == "samp_name"), ])) %>%  # Set the 'sample_name' row as column names
-  slice(-1)  # Remove the 'sample_name' row now used as column names
-#change term name(s) to match with MDT template
-Samples <- Samples %>%
-  rename("Sample_Name" = "samp_name")
+  slice(-1)  %>% # Remove the 'sample_name' row now used as column names
+  rename("id" = "samp_name")
 
 ## expRun
 expRun <- expRun %>%
   slice(-(1:(which(expRun[[1]] == "samp_name") - 1))) %>%  
   rename_with(~ as.character(expRun[which(expRun[[1]] == "samp_name"), ])) %>% 
-  slice(-1) 
-expRun <- expRun %>%
-  rename("Sample_Name" = "samp_name")
+  slice(-1) %>%
+  rename("id" = "samp_name")
 
 ## otu
 otu <- otu %>%
@@ -77,7 +86,8 @@ otu <- otu %>%
 taxa <- taxa %>%
   slice(-(1:(which(taxa[[1]] == "seq_id") - 1))) %>%  # Remove rows above 'seq_id'
   rename_with(~ as.character(taxa[which(taxa[[1]] == "seq_id"), ])) %>%  # Set the 'seq_id' row as column names
-  slice(-1)  
+  slice(-1) %>%
+  rename("id" = "seq_id") 
 
 #### Format Project if multiple assays were applied within a project
 if (ncol(Project) > 2) {
@@ -94,11 +104,11 @@ filtered_expRun <- expRun %>%
       grepl(seq_run, seq_run_id, ignore.case = TRUE)
   )
 filtered_Samples <- Samples %>% 
-  filter(Sample_Name %in% filtered_expRun$Sample_Name)
+  filter(id %in% filtered_expRun$id)
 filtered_Samples$assay_name <- NULL #Remove assay_name from here as it's also in expRun
 
 Samples_expRun <- filtered_Samples %>% 
-  inner_join(filtered_expRun, by = "Sample_Name")
+  inner_join(filtered_expRun, by = "id")
 
 unique(Samples_expRun$assay_name)
 unique(Samples_expRun$seq_run_id)
@@ -113,6 +123,12 @@ expRun <- expRun %>%
   select(where(~ any(!is.na(.))))
 taxa <- taxa %>%
   select(where(~ any(!is.na(.))))
+
+##### Remove assay_name from Samples_expRun
+# Note: While the assay_name field is necessary in the FAIRe sample/experimentRun metadata format to support multiple assays within a single dataset, 
+# the MDT format assumes each dataset corresponds to a single assay and therefore does not require this field in the sample sheet.
+Samples_expRun <- Samples_expRun %>%
+  select(-"assay_name")
 
 #### Output an Excel file
 project_id<- Project[which(Project$term=='project_id'),'value'][[1]]
